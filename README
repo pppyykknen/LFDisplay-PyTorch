@@ -1,0 +1,20 @@
+This repository provides a framework of a differentiable holographic model, which can be used with PyTorch based models for lightfield processing using deep learning.
+This repository requires CUDA and a GPU with high amount of memory. GTX 1080 has been confirmed to work.
+
+How to use:
+
+1. Clone this repo
+2. Generate projector and ground true images using https://github.com/LeksiDor/LFDisplay
+3. Place the generated image folders in the data folder. The folder structure should look like./data/GroundTrueImages/ and ./data/ProjectorImages_0000/
+4. Install Anaconda from https://docs.anaconda.com/anaconda/install/
+5. Configure Anaconda environment:
+	conda env create --name lightfieldEnv --file environment.yml
+	conda activate lightfieldEnv
+6. Run main.py
+       python main.py
+
+There are multiple variables in main.py that can be used to modify the display, used data, used model or the training parameters.  
+Important parameters are the axis order axisOrder, training iteration count maxIters and backpropagated views per iteration viewsPerIter. The training saves periodically, and can be resumed by setting the startIter parameter to the latest checkpoint.
+Currently, the framework is for using data of a single scene, but it is trivial to extend to multiscene processing by loading additional scenes and concatenating them along the 0 (batch) axis
+
+viz.py can be used to visualize both input and output data. 
