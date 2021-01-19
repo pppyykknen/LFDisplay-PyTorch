@@ -22,9 +22,14 @@ device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cp
 # Check kernel size depending on the projector disparity
 # Add ssim to loss # doesn't really work
 # Precalculate direc and ori? would make rendering quicker but also increase memory requirements
+# Change network projection from none residual to add or multiply (change out = self.head(out) to
+# out = self.head(out)+x or out = self.head(out)*x in UNET class)
+# Try image in logarithmic scale (x = torch.exp(x+10^-12)
+# Add x-coordinate of the image to the input
+# Structure network from ground up, UNET doesn't appear to be the best based on this type of data
 ###
 
-#-----------PARAMETERS--------------------
+# -----------PARAMETERS--------------------
 # Define I/O image folers
 GTFolder = "./data/GroundTrueImages/"
 inFolder = "./data/ProjectorImages_0000/"
@@ -40,9 +45,8 @@ colorChannels = 3
 numProjectors = 41
 numViews = 101  # 101
 views = list(range(numViews))
-useLAB = True # Use LAB color space. False: BGR
+useLAB = True  # Use LAB color space. False: BGR
 primaryResolution = 3
-
 
 # Training parameters
 train = 1
@@ -55,7 +59,7 @@ startIter = 0
 alphaMSE = 1
 alphaSSIM = 100
 viewsPerIter = 15
-LRAnnulmentRate = 200 # reduce the learning rate after how many iterations
+LRAnnulmentRate = 200  # reduce the learning rate after how many iterations
 
 # Model parameters
 kernelSize = [3, 7]  # For 2 last axes
@@ -77,7 +81,7 @@ inputSize = (imgHeight, imgWidth, colorChannels * numProjectors)
 outputSize = (imgHeight, imgWidth, colorChannels * numViews)
 inputs = np.zeros(inputSize)
 outputs = np.zeros(outputSize)
-#------------------END OF PARAMETERS-----------
+# ------------------END OF PARAMETERS-----------
 
 for ii in range(0, numProjectors):
     img = cv2.imread(inFolder + "{0:0=4d}".format(ii) + ".exr", cv2.IMREAD_ANYCOLOR | cv2.IMREAD_ANYDEPTH)
@@ -125,7 +129,6 @@ dec_chs = (*reversed(layers),)
 model = UNet(inputSize=[x.size(-2), x.size(-1)], enc_chs=enc_chs, dec_chs=dec_chs, kernel=kernelSize,
              useDepthwise=useDepthwise).to(device)
 # model = fullyConnectedModel().to(device)
-
 
 
 scaler = GradScaler()
